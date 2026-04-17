@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+# Personal HR data (xlsx samples) & scripts cache
+/dashboard/
+/scripts/seed-org.json
+/scripts/seed-org.sql
+
+# Claude Code local settings
+.claude/

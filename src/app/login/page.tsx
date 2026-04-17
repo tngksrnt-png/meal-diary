@@ -1,31 +1,54 @@
 "use client";
-
-import { handleGoogleSignIn } from "@/lib/auth";
+import { useState } from "react";
 import { motion } from "motion/react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-apple-black px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-sm text-center"
-      >
-        <h1 className="mb-2 text-[40px] font-semibold leading-[1.1] text-white">
-          Meal Diary
-        </h1>
-        <p className="mb-12 text-[17px] font-normal leading-[1.47] text-white/80">
-          AI로 간편하게 식단을 기록하세요
-        </p>
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="card w-full max-w-sm p-8 flex flex-col gap-6"
+      >
+        <div>
+          <div className="text-2xl font-semibold tracking-tight">ReNA HR</div>
+          <p className="text-sm text-[var(--fg-muted)] mt-1">
+            그룹 HR 대시보드에 로그인하세요
+          </p>
+        </div>
         <button
-          onClick={handleGoogleSignIn}
-          className="w-full rounded-[8px] bg-apple-blue px-4 py-3 text-[17px] font-normal text-white transition-opacity hover:opacity-90 active:opacity-80"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="btn btn-primary w-full justify-center py-3"
         >
-          Google로 로그인
+          {loading ? "연결 중…" : "Google로 로그인"}
         </button>
+        {error ? (
+          <p className="text-xs text-[var(--danger)]">{error}</p>
+        ) : null}
+        <p className="text-xs text-[var(--fg-subtle)]">
+          허용된 그룹 HR 계정만 접근할 수 있습니다.
+        </p>
       </motion.div>
-    </div>
+    </main>
   );
 }

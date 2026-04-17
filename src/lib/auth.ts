@@ -1,22 +1,45 @@
-"use client";
+import "server-only";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-import { createClient } from "@/lib/supabase/client";
-
-export async function handleGoogleSignIn() {
-  const supabase = createClient();
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-  if (error) {
-    console.error("Login error:", error.message);
-  }
+export async function getSession() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
 }
 
-export async function handleSignOut() {
-  const supabase = createClient();
-  await supabase.auth.signOut();
-  window.location.href = "/login";
+/**
+ * Returns the whitelisted profile for the current user or null if not whitelisted.
+ */
+export async function getAllowedProfile() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email, role, user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return profile ?? null;
+}
+
+/**
+ * Guard for dashboard routes. Redirects to /login if unauthenticated,
+ * or /no-access if authenticated but not whitelisted.
+ */
+export async function requireAdmin() {
+  const profile = await getAllowedProfile();
+  if (!profile) {
+    // Distinguish: if there's a user but no profile, send to no-access
+    const user = await getSession();
+    if (user) redirect("/no-access");
+    redirect("/login");
+  }
+  return profile;
 }
