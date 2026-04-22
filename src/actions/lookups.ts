@@ -18,12 +18,55 @@ const revalidate = () => {
 export async function createLookupAction(input: { type: string; code: string; label: string }) {
   await requireAdmin();
   const supabase = await createClient();
+  const { data: last } = await supabase
+    .from("lookups")
+    .select("order_idx")
+    .eq("type", input.type)
+    .order("order_idx", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   const { error } = await supabase.from("lookups").insert({
     type: input.type,
     code: input.code,
     label: input.label,
+    order_idx: (last?.order_idx ?? -1) + 1,
   });
   if (error) return fail(error.message);
+  revalidate();
+  return ok();
+}
+
+export async function reorderLookupAction(input: { id: string; direction: "up" | "down" }) {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data: current } = await supabase
+    .from("lookups")
+    .select("id,type,order_idx")
+    .eq("id", input.id)
+    .maybeSingle();
+  if (!current) return fail("찾을 수 없습니다.");
+
+  const neighborQ = supabase
+    .from("lookups")
+    .select("id,order_idx")
+    .eq("type", current.type)
+    .order("order_idx", { ascending: input.direction === "up" ? false : true })
+    .limit(1);
+  const { data: neighbor } = await (input.direction === "up"
+    ? neighborQ.lt("order_idx", current.order_idx)
+    : neighborQ.gt("order_idx", current.order_idx)
+  ).maybeSingle();
+  if (!neighbor) return ok(); // already at boundary
+
+  // Swap via a temporary value to avoid unique conflicts (no unique on order_idx, but safe)
+  const tmp = -1_000_000 - current.order_idx;
+  const u1 = await supabase.from("lookups").update({ order_idx: tmp }).eq("id", current.id);
+  if (u1.error) return fail(u1.error.message);
+  const u2 = await supabase.from("lookups").update({ order_idx: current.order_idx }).eq("id", neighbor.id);
+  if (u2.error) return fail(u2.error.message);
+  const u3 = await supabase.from("lookups").update({ order_idx: neighbor.order_idx }).eq("id", current.id);
+  if (u3.error) return fail(u3.error.message);
+
   revalidate();
   return ok();
 }

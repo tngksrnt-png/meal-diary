@@ -44,6 +44,53 @@ export function tenureMonths(hire: string | null, termination: string | null = n
   return days / 30.4375;
 }
 
+/**
+ * 총경력(년) 자동 산정.
+ * - 입사전경력이 있으면: 입사전경력 + (현재 근속 또는 재직기간)
+ * - 입사전경력이 없으면: 근속/재직기간만
+ * - 둘 다 없으면 null
+ */
+export function totalCareerYears(
+  careerBefore: number | null | undefined,
+  hire: string | null,
+  termination: string | null = null,
+): number | null {
+  const tenureMo = tenureMonths(hire, termination);
+  const tenureYr = tenureMo != null ? tenureMo / 12 : null;
+  if (careerBefore == null && tenureYr == null) return null;
+  return (careerBefore ?? 0) + (tenureYr ?? 0);
+}
+
+/**
+ * 만 나이 계산. 미래 일자나 잘못된 데이터는 null.
+ * 입력 양식 예: "1978-07-10" 또는 ISO timestamp.
+ */
+export function ageFromBirth(birth: string | null, asOf: Date = new Date()): number | null {
+  if (!birth) return null;
+  const b = new Date(birth);
+  if (isNaN(b.getTime())) return null;
+  // 과거 데이터에 미래 연도(2056 등) 오기재가 있어 0~110 구간만 허용
+  let age = asOf.getFullYear() - b.getFullYear();
+  const m = asOf.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && asOf.getDate() < b.getDate())) age -= 1;
+  if (age < 0 || age > 110) return null;
+  return age;
+}
+
+export const AGE_BUCKETS: { key: string; test: (a: number) => boolean }[] = [
+  { key: "20대 이하", test: (a) => a < 30 },
+  { key: "30대", test: (a) => a >= 30 && a < 40 },
+  { key: "40대", test: (a) => a >= 40 && a < 50 },
+  { key: "50대", test: (a) => a >= 50 && a < 60 },
+  { key: "60대 이상", test: (a) => a >= 60 },
+];
+
+/** ISO 날짜(YYYY-MM-DD)에서 N일 전 비교용 키 생성 */
+export function daysAgoIso(days: number, ref: Date = new Date()): string {
+  const d = new Date(ref.getTime() - days * 24 * 60 * 60 * 1000);
+  return d.toISOString().slice(0, 10);
+}
+
 export function countBy<T extends string | number>(items: T[]): Map<T, number> {
   const m = new Map<T, number>();
   for (const it of items) m.set(it, (m.get(it) ?? 0) + 1);

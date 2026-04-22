@@ -2,31 +2,38 @@
 
 @theme {
   /* Surfaces */
-  --color-bg: #f6f7f9;
+  --color-bg: #f5f7fa;
   --color-surface: #ffffff;
-  --color-border: #e5e7eb;
-  --color-muted: #f3f4f6;
+  --color-border: #e4e7ec;
+  --color-muted: #f2f4f7;
 
-  /* Text */
-  --color-fg: #111827;
-  --color-fg-muted: #6b7280;
-  --color-fg-subtle: #9ca3af;
+  /* Text — comfortable contrast, not harsh black */
+  --color-fg: #1f2937;         /* slate-800 — softer than pitch black */
+  --color-fg-muted: #475569;   /* slate-600 — readable secondary */
+  --color-fg-subtle: #64748b;  /* slate-500 — tertiary */
 
-  /* Brand (ReNA green + accent) */
+  /* Brand */
   --color-brand: #16a34a;
   --color-brand-soft: #dcfce7;
-  --color-accent: #2563eb;
-  --color-accent-soft: #dbeafe;
+  --color-accent: #0ea5e9;
+  --color-accent-soft: #e0f2fe;
+
+  /* Dark chrome (banner / sidebar / primary KPI) — soft slate, not near-black */
+  --color-dark: #334155;       /* slate-700 */
+  --color-dark-2: #475569;     /* slate-600 hover */
+  --color-dark-3: #1e293b;     /* slate-800 used only for the logo/accent */
+
   --color-danger: #dc2626;
   --color-warn: #f59e0b;
 
-  /* Chart palette */
-  --color-c1: #16a34a;
-  --color-c2: #2563eb;
-  --color-c3: #f59e0b;
-  --color-c4: #db2777;
-  --color-c5: #7c3aed;
-  --color-c6: #0ea5e9;
+  /* Chart palette — bright, friendly (sky / emerald / amber / rose / violet / cyan / orange) */
+  --color-c1: #3b82f6;   /* blue */
+  --color-c2: #22c55e;   /* green */
+  --color-c3: #f59e0b;   /* amber */
+  --color-c4: #ec4899;   /* pink */
+  --color-c5: #8b5cf6;   /* violet */
+  --color-c6: #06b6d4;   /* cyan */
+  --color-c7: #f97316;   /* orange */
 }
 
 :root {
@@ -41,6 +48,9 @@
   --brand-soft: var(--color-brand-soft);
   --accent: var(--color-accent);
   --accent-soft: var(--color-accent-soft);
+  --dark: var(--color-dark);
+  --dark-2: var(--color-dark-2);
+  --dark-3: var(--color-dark-3);
   --danger: var(--color-danger);
   --warn: var(--color-warn);
 }
@@ -50,30 +60,80 @@ body {
     "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-.card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.875rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: 0.625rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid var(--border);
-  background: var(--surface);
   color: var(--fg);
-  transition: background-color 0.12s ease;
+  background-color: var(--bg);
 }
-.btn:hover { background: var(--muted); }
-.btn-primary { background: var(--brand); color: white; border-color: var(--brand); }
-.btn-primary:hover { filter: brightness(0.95); background: var(--brand); }
-.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
-.btn-danger:hover { filter: brightness(0.95); background: var(--danger); }
+
+@layer components {
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--fg);
+  }
+
+  .card-dark {
+    background-color: var(--dark);
+    color: #ffffff;
+    border-radius: 0.5rem;
+  }
+
+  .banner {
+    background-color: var(--dark);
+    color: #ffffff;
+    border-radius: 0.5rem;
+  }
+
+  .label-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+  }
+  .btn:hover { background: var(--muted); }
+  .btn-primary { background: var(--dark); color: #ffffff; border-color: var(--dark); }
+  .btn-primary:hover { filter: brightness(1.1); background: var(--dark); }
+  .btn-danger { background: var(--danger); color: #ffffff; border-color: var(--danger); }
+  .btn-danger:hover { filter: brightness(1.05); background: var(--danger); }
+}
+
+/* Context-aware muted text — auto-flips on dark surfaces */
+.text-muted-auto { color: var(--fg-muted); }
+.text-subtle-auto { color: var(--fg-subtle); }
+
+.card-dark .label-eyebrow,
+.banner .label-eyebrow,
+.on-dark .label-eyebrow,
+.card-dark .text-muted-auto,
+.banner .text-muted-auto,
+.on-dark .text-muted-auto {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.card-dark .text-subtle-auto,
+.banner .text-subtle-auto,
+.on-dark .text-subtle-auto {
+  color: rgba(255, 255, 255, 0.62);
+}

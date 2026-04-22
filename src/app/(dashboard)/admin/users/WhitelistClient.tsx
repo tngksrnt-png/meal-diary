@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { Database } from "@/types/database";
 import { addWhitelistAction, removeWhitelistAction } from "@/actions/users";
 
@@ -15,12 +16,17 @@ export function WhitelistClient({
   const [email, setEmail] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const router = useRouter();
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => {
     setErr(null);
     start(async () => {
       const r = await fn();
-      if (!r.ok) setErr(r.error ?? "오류");
+      if (!r.ok) {
+        setErr(r.error ?? "오류");
+        return;
+      }
+      router.refresh();
     });
   };
 

@@ -15,7 +15,7 @@ XLSX = os.path.join(ROOT, "dashboard", "ReNA 그룹사_조직도_260416.xlsx")
 seed = {"categories": [], "companies": [], "worksites": [], "departments": []}
 
 # HQ
-seed["categories"].append({"code": "HQ", "name": "HQ 본사", "order_idx": 0, "is_hq": True})
+seed["categories"].append({"code": "HQ", "name": "HQ", "order_idx": 0, "is_hq": True})
 seed["companies"].append({"cat_code": "HQ", "name": "ReNA HQ", "ceo_name": "이선종", "order_idx": 0})
 
 hq_divisions = [

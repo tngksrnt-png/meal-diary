@@ -2,8 +2,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 const PALETTE = [
-  "var(--color-c1)", "var(--color-c2)", "var(--color-c3)",
-  "var(--color-c4)", "var(--color-c5)", "var(--color-c6)",
+  "#3b82f6", "#22c55e", "#f59e0b", "#ec4899",
+  "#8b5cf6", "#06b6d4", "#f97316",
 ];
 
 export type DonutDatum = { name: string; value: number };
@@ -45,7 +45,7 @@ export function DonutChart({
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <div className="text-xs text-[var(--fg-muted)]">{totalLabel ?? "합계"}</div>
+        <div className="text-xs text-muted-auto">{totalLabel ?? "합계"}</div>
         <div className="text-xl font-semibold tabular-nums">{total.toLocaleString()}</div>
       </div>
     </div>

@@ -26,6 +26,35 @@ export default async function ImportPage() {
           재직자/퇴직자 시트를 업로드하면 사번 기준으로 업서트됩니다.
         </p>
       </div>
+      <div className="card p-4 md:p-5">
+        <SectionHeader
+          title="양식 다운로드"
+          description="현재 시스템의 드롭다운 값·사업장·부서 목록이 참고 시트로 함께 포함됩니다"
+        />
+        <div className="flex flex-wrap gap-2">
+          <a
+            href="/api/template?type=active"
+            className="btn"
+            download
+          >
+            📥 재직자 양식 (.xlsx)
+          </a>
+          <a
+            href="/api/template?type=retired"
+            className="btn"
+            download
+          >
+            📥 퇴직자 양식 (.xlsx)
+          </a>
+        </div>
+        <ul className="mt-3 text-xs text-[var(--fg-muted)] list-disc pl-5 space-y-0.5">
+          <li>헤더 행은 수정하지 마세요 (매핑 기준).</li>
+          <li>샘플 한 줄이 포함되어 있으니 그 행을 지우고 실제 데이터를 채워 넣으세요.</li>
+          <li>사번이 같으면 덮어쓰기, 사번이 비면 신규 추가됩니다.</li>
+          <li>사업장·부서·직급 등은 <b>입력 참고</b> 시트의 목록과 일치해야 자동 매칭됩니다.</li>
+        </ul>
+      </div>
+
       <ImportClient categories={categories ?? []} companies={companies ?? []} />
 
       <div className="card p-4 md:p-5">

@@ -6,16 +6,19 @@ export type BarListItem = {
   value: number;
   href?: string;
   color?: string;
+  pct?: number; // optional pre-computed ratio (0..1)
 };
 
 export function BarList({
   items,
   max,
-  valueFormatter = (n) => n.toLocaleString(),
+  valueSuffix = "",
+  showPercent = false,
 }: {
   items: BarListItem[];
   max?: number;
-  valueFormatter?: (n: number) => string;
+  valueSuffix?: string;
+  showPercent?: boolean;
 }) {
   const top = max ?? Math.max(1, ...items.map((i) => i.value));
   return (
@@ -26,18 +29,23 @@ export function BarList({
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="truncate text-[var(--fg)]">{it.label}</span>
+                <span className="text-[var(--fg)] break-keep">{it.label}</span>
                 <span className="text-[var(--fg-muted)] tabular-nums">
-                  {valueFormatter(it.value)}
+                  {it.value.toLocaleString()}{valueSuffix}
+                  {showPercent && typeof it.pct === "number" && (
+                    <span className="ml-1 text-[var(--fg-subtle)]">
+                      ({(it.pct * 100).toFixed(1)}%)
+                    </span>
+                  )}
                 </span>
               </div>
-              <div className="mt-1 h-1.5 w-full rounded-full bg-[var(--muted)] overflow-hidden">
+              <div className="mt-1 h-2 w-full rounded-sm bg-[var(--muted)] overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${width}%` }}
                   transition={{ duration: 0.4, delay: idx * 0.02, ease: "easeOut" }}
-                  style={{ backgroundColor: it.color ?? "var(--brand)" }}
-                  className="h-full rounded-full"
+                  style={{ backgroundColor: it.color ?? "var(--color-c1)" }}
+                  className="h-full rounded-sm"
                 />
               </div>
             </div>

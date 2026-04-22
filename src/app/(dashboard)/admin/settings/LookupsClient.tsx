@@ -1,7 +1,13 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { Database } from "@/types/database";
-import { createLookupAction, updateLookupAction, deleteLookupAction } from "@/actions/lookups";
+import {
+  createLookupAction,
+  updateLookupAction,
+  deleteLookupAction,
+  reorderLookupAction,
+} from "@/actions/lookups";
 
 type L = Database["public"]["Tables"]["lookups"]["Row"];
 
@@ -13,17 +19,25 @@ export function LookupsClient({
   types: { key: string; label: string }[];
 }) {
   const [tab, setTab] = useState(types[0]?.key ?? "rank");
-  const rows = useMemo(() => lookups.filter((l) => l.type === tab), [lookups, tab]);
+  const rows = useMemo(
+    () => lookups.filter((l) => l.type === tab).sort((a, b) => a.order_idx - b.order_idx),
+    [lookups, tab],
+  );
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const [newCode, setNewCode] = useState("");
   const [newLabel, setNewLabel] = useState("");
+  const router = useRouter();
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => {
     setErr(null);
     start(async () => {
       const r = await fn();
-      if (!r.ok) setErr(r.error ?? "오류");
+      if (!r.ok) {
+        setErr(r.error ?? "오류");
+        return;
+      }
+      router.refresh();
     });
   };
 
@@ -82,6 +96,7 @@ export function LookupsClient({
         <table className="min-w-full text-sm">
           <thead className="text-[var(--fg-muted)]">
             <tr>
+              <th className="text-left py-2 px-3 font-normal">순서</th>
               <th className="text-left py-2 px-3 font-normal">코드</th>
               <th className="text-left py-2 px-3 font-normal">라벨</th>
               <th className="text-left py-2 px-3 font-normal">활성</th>
@@ -89,12 +104,22 @@ export function LookupsClient({
             </tr>
           </thead>
           <tbody>
-            {rows.map((l) => (
-              <LookupRow key={l.id} row={l} onSave={(patch) => run(() => updateLookupAction(patch))} onDelete={(id) => run(() => deleteLookupAction(id))} />
+            {rows.map((l, idx) => (
+              <LookupRow
+                key={l.id}
+                row={l}
+                isFirst={idx === 0}
+                isLast={idx === rows.length - 1}
+                onSave={(patch) => run(() => updateLookupAction(patch))}
+                onDelete={(id) => run(() => deleteLookupAction(id))}
+                onReorder={(direction) =>
+                  run(() => reorderLookupAction({ id: l.id, direction }))
+                }
+              />
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-6 text-center text-[var(--fg-muted)] text-xs">
+                <td colSpan={5} className="py-6 text-center text-[var(--fg-muted)] text-xs">
                   항목이 없습니다.
                 </td>
               </tr>
@@ -108,18 +133,44 @@ export function LookupsClient({
 
 function LookupRow({
   row,
+  isFirst,
+  isLast,
   onSave,
   onDelete,
+  onReorder,
 }: {
   row: L;
+  isFirst: boolean;
+  isLast: boolean;
   onSave: (patch: { id: string; label: string; is_active: boolean }) => void;
   onDelete: (id: string) => void;
+  onReorder: (direction: "up" | "down") => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(row.label);
   const [active, setActive] = useState(row.is_active);
   return (
     <tr className="border-t border-[var(--border)]">
+      <td className="py-2 px-3 w-24 whitespace-nowrap">
+        <div className="inline-flex gap-0.5">
+          <button
+            className="btn !py-0.5 !px-1.5 !text-xs disabled:opacity-30"
+            disabled={isFirst}
+            onClick={() => onReorder("up")}
+            aria-label="위로"
+          >
+            ▲
+          </button>
+          <button
+            className="btn !py-0.5 !px-1.5 !text-xs disabled:opacity-30"
+            disabled={isLast}
+            onClick={() => onReorder("down")}
+            aria-label="아래로"
+          >
+            ▼
+          </button>
+        </div>
+      </td>
       <td className="py-2 px-3 text-[var(--fg-muted)]">{row.code}</td>
       <td className="py-2 px-3">
         {editing ? (

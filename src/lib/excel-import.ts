@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 export type ImportSheetType = "active" | "retired";
 
 export type RawEmployeeRow = {
+  company_name: string | null;
   employee_no: string | null;
   name: string;
   dept_name: string | null;
@@ -10,7 +11,6 @@ export type RawEmployeeRow = {
   birth_date: string | null;
   hire_date: string | null;
   termination_date: string | null;
-  tenure_years: number | null;
   gender: string | null;
   employment_type: string | null;
   nationality_type: string | null;
@@ -22,22 +22,21 @@ export type RawEmployeeRow = {
   hire_channel: string | null;
   education: string | null;
   career_before: number | null;
-  total_career: number | null;
   status: string | null;
   termination_reason: string | null;
   memo: string | null;
 };
 
 const COL_HEADERS_ACTIVE = [
-  "사번", "이름", "부서", "직급", "생년월일", "입사일", "근속연수",
+  "사번", "이름", "부서", "직급", "생년월일", "입사일",
   "성별", "고용형태", "구분(내/외국인)", "국적", "사업장", "회계구분", "직군",
-  "연봉(원)", "채용경로", "최종학력", "입사전경력(년)", "총경력(년)", "재직상태", "비고",
+  "연봉(원)", "채용경로", "최종학력", "입사전경력(년)", "재직상태", "비고",
 ];
 
 const COL_HEADERS_RETIRED = [
-  "사번", "이름", "부서", "직급", "생년월일", "입사일", "퇴사일", "재직기간",
+  "사번", "이름", "부서", "직급", "생년월일", "입사일", "퇴사일",
   "성별", "고용형태", "구분(내/외국인)", "국적", "사업장", "회계구분", "직군",
-  "연봉(원)", "채용경로", "최종학력", "입사전경력(년)", "총경력(년)", "재직상태",
+  "연봉(원)", "채용경로", "최종학력", "입사전경력(년)", "재직상태",
   "퇴직사유", "비고",
 ];
 
@@ -107,10 +106,12 @@ export function parseEmployeeSheet(
   const dataRows = arr.slice(1) as unknown[][];
 
   const rows: RawEmployeeRow[] = [];
+  const companyHeaderIdx = idx("법인"); // -1 if legacy template without 법인 column
   for (const r of dataRows) {
     const name = toStr(r[idx("이름")]);
     if (!name) continue;
     rows.push({
+      company_name: companyHeaderIdx >= 0 ? toStr(r[companyHeaderIdx]) : null,
       employee_no: toStr(r[idx("사번")]),
       name,
       dept_name: toStr(r[idx("부서")]),
@@ -118,7 +119,6 @@ export function parseEmployeeSheet(
       birth_date: toIsoDate(r[idx("생년월일")]),
       hire_date: toIsoDate(r[idx("입사일")]),
       termination_date: sheetType === "retired" ? toIsoDate(r[idx("퇴사일")]) : null,
-      tenure_years: toNumber(r[idx(sheetType === "retired" ? "재직기간" : "근속연수")]),
       gender: toStr(r[idx("성별")]),
       employment_type: toStr(r[idx("고용형태")]),
       nationality_type: toStr(r[idx("구분(내/외국인)")]),
@@ -130,7 +130,6 @@ export function parseEmployeeSheet(
       hire_channel: toStr(r[idx("채용경로")]),
       education: toStr(r[idx("최종학력")]),
       career_before: toNumber(r[idx("입사전경력(년)")]),
-      total_career: toNumber(r[idx("총경력(년)")]),
       status: toStr(r[idx("재직상태")]) ?? (sheetType === "retired" ? "퇴직" : "재직"),
       termination_reason: sheetType === "retired" ? toStr(r[idx("퇴직사유")]) : null,
       memo: toStr(r[idx("비고")]),

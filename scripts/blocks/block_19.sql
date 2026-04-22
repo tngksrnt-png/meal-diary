@@ -1,0 +1,7 @@
+-- 우리운수: 2명
+WITH target_co AS (SELECT id FROM public.companies WHERE name = '우리운수'),
+     target_ws AS (SELECT id, name FROM public.worksites WHERE company_id = (SELECT id FROM target_co) ORDER BY order_idx),
+     target_dep AS (SELECT id, name, worksite_id FROM public.departments WHERE company_id = (SELECT id FROM target_co) AND parent_department_id IS NULL ORDER BY order_idx)
+INSERT INTO public.employees (employee_no, name, company_id, worksite_id, department_id, rank_code, birth_date, hire_date, termination_date, gender, employment_type_code, nationality_type, nationality, accounting_type_code, job_family_code, annual_salary, hire_channel_code, education_code, career_before_join_years, total_career_years, status_code, termination_reason_code) VALUES
+('T2500809', '닌', (SELECT id FROM target_co), (SELECT id FROM target_ws ORDER BY random() LIMIT 1), (SELECT id FROM target_dep WHERE worksite_id = (SELECT id FROM target_ws ORDER BY random() LIMIT 1) ORDER BY random() LIMIT 1), '사원', '1973-04-04', '2025-11-16', NULL, '여', '정규직', '외국인', '우즈베키스탄', '제조', '생산', 29798960, '직채용', '학사', 0, 1, '재직', NULL),
+('T2300810', '박지원', (SELECT id FROM target_co), (SELECT id FROM target_ws ORDER BY random() LIMIT 1), (SELECT id FROM target_dep WHERE worksite_id = (SELECT id FROM target_ws ORDER BY random() LIMIT 1) ORDER BY random() LIMIT 1), '사원', '1986-11-12', '2023-10-06', '2025-01-25', '남', '정규직', '내국인', '대한민국', '제조', '생산', 27360550, '직채용', '고졸', 0, 3, '퇴직', '자발');
